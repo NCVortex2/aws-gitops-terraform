@@ -66,30 +66,20 @@ resource "aws_route_table_association" "public_assoc" {
   route_table_id = aws_route_table.public_rt.id
 }
 
-# --- Security Group ---
+# --- Security Groups ---
 resource "aws_security_group" "web_sg" {
   name        = "gitops-web-sg"
   description = "Allow inbound HTTP"
   vpc_id      = aws_vpc.gitops_vpc.id
 
   ingress {
-    description = "Allow HTTP"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    description = "Allow SSH for EC2 Instance Connect"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["3.16.146.0/29"]
-  }
-
   egress {
-    description = "Allow all outbound"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -98,6 +88,30 @@ resource "aws_security_group" "web_sg" {
 
   tags = {
     Name = "gitops-web-sg"
+  }
+}
+
+resource "aws_security_group" "ssh_sg" {
+  name        = "gitops-ssh-sg"
+  description = "Allow SSH from EC2 Instance Connect"
+  vpc_id      = aws_vpc.gitops_vpc.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["3.16.146.0/29"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "gitops-ssh-sg"
   }
 }
 
@@ -116,7 +130,7 @@ resource "aws_instance" "web_server" {
   ami                         = data.aws_ami.amazon_linux.id
   instance_type               = "t3.micro"
   subnet_id                   = aws_subnet.public_subnet_1.id
-  vpc_security_group_ids      = [aws_security_group.web_sg.id]
+  vpc_security_group_ids      = [aws_security_group.web_sg.id, aws_security_group.ssh_sg.id]
   associate_public_ip_address = true
 
   user_data = <<-EOF
