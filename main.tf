@@ -20,11 +20,10 @@ provider "aws" {
   region = "us-east-2"
 }
 
-# 1. Networking (VPC, Subnet, IGW, Route Table)
+# --- Networking ---
 resource "aws_vpc" "gitops_vpc" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
-  enable_dns_support   = true
 
   tags = {
     Name = "gitops-prod-vpc"
@@ -34,7 +33,6 @@ resource "aws_vpc" "gitops_vpc" {
 resource "aws_subnet" "public_subnet_1" {
   vpc_id                  = aws_vpc.gitops_vpc.id
   cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-2a"
   map_public_ip_on_launch = true
 
   tags = {
@@ -68,14 +66,13 @@ resource "aws_route_table_association" "public_assoc" {
   route_table_id = aws_route_table.public_rt.id
 }
 
-# 2. Security Group (HTTP & Egress)
+# --- Security ---
 resource "aws_security_group" "web_sg" {
   name        = "gitops-web-sg"
-  description = "Allow inbound HTTP traffic"
+  description = "Allow inbound HTTP"
   vpc_id      = aws_vpc.gitops_vpc.id
 
   ingress {
-    description = "HTTP from anywhere"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -83,7 +80,6 @@ resource "aws_security_group" "web_sg" {
   }
 
   egress {
-    description = "Allow all outbound traffic"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -95,7 +91,7 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
-# 3. Dynamic AMI Lookup (Amazon Linux 2023)
+# --- Server ---
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
@@ -106,7 +102,6 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
-# 4. EC2 Web Server Instance
 resource "aws_instance" "web_server" {
   ami                         = data.aws_ami.amazon_linux.id
   instance_type               = "t2.micro"
