@@ -69,7 +69,7 @@ resource "aws_route_table_association" "public_assoc" {
 # --- Security ---
 resource "aws_security_group" "web_sg" {
   name        = "gitops-web-sg"
-  description = "Allow inbound HTTP and SSH"
+  description = "Allow inbound HTTP traffic"
   vpc_id      = aws_vpc.gitops_vpc.id
 
   ingress {
@@ -85,7 +85,6 @@ resource "aws_security_group" "web_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    # AWS EC2 Instance Connect service CIDR block for us-east-2
     cidr_blocks = ["3.16.146.0/29"]
   }
 
