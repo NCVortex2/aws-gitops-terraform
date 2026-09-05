@@ -22,6 +22,8 @@ resource "aws_vpc" "gitops_vpc" {
     Name        = "gitops-prod-vpc"
     Environment = "Production"
     ManagedBy   = "Terraform"
+    Owner       = "Nic"
+    Project     = "DevOps-Portfolio"
   }
 }
 
